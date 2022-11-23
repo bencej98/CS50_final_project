@@ -1,8 +1,10 @@
 from flask import Flask
-from flask import Flask, render_template, redirect, request, session
+from flask import Flask, render_template, redirect, request, session, Response
 from flask_session import Session
 from helpers import login_required
+from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
+
 
 # Configure application
 app = Flask(__name__)
@@ -25,6 +27,14 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+# The login_required decorator requires the user to login before use
+#@login.required
+
+@app.route('/')
+#@login_required
+def main_page():
+    return render_template("login.html")
+
 '''
 @app.route('/register', methods=['GET', 'POST'])
 # Registers the user
@@ -38,18 +48,6 @@ def register():
 '''
 
 
-
-
-# The login_required decorator requires the user to login before use
-#@login.required
-
-@app.route('/')
-#@login_required
-def main_page():
-    return render_template("index.html")
-
-
-'''
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
@@ -61,20 +59,22 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 400)
+            return Response(
+                    "must provide username", 
+                    status=400,)
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 400)
+            return Response("must provide password", status=400,)
 
         # Query database for username
         # rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            return apology("invalid username and/or password", 400)
+            return Response("invalid username and/or password", status=400,)
         
-              # Remember which user has logged in
+        # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
@@ -83,5 +83,4 @@ def login():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
-        
-'''
+
