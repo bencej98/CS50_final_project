@@ -4,6 +4,7 @@ from flask_session import Session
 from helpers import login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
+import re
 
 
 # Configure application
@@ -18,6 +19,12 @@ app.config['SESSION_PERMANENT'] = False
 # Stores the session in the system hard drive instead of cookies
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
+
+# Establishes connection with the database
+con = sqlite3.connect("test.db")
+
+# Cursos is needed to execute statemenst and fetch results
+cur = con.cursor()
 
 app.after_request
 def after_request(response):
@@ -35,7 +42,7 @@ def after_request(response):
 def main_page():
     return render_template("login.html")
 
-'''
+
 @app.route('/register', methods=['GET', 'POST'])
 # Registers the user
 def register():
@@ -43,11 +50,37 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
 
-    #else:
+    else:
+        if not request.form.get("username"):
+            return Response("Must provide username", status=400)
+
+        elif not request.form.get("password"):
+            return Response("Must provide password", status=400)
+
+        elif validate(request.form.get("password")) == False:
+            return Response("Password must contain at least 8 characters, a number and a capital letter!", 400)
+
+        elif not request.form.get("confirmation"):
+            return Response("Must confirm password", status=400)
+
+        elif request.form.get("password") != request.form.get("confirmation"):
+            return Response("Passwords must match", status=400)
         
-'''
+        # Stores the hased password and the username in the database
+        hashed_password = generate_password_hash(request.form.get("password"))
+        username = request.form.get("username")
 
+                # Checks for username duplication
+        try:
+            new_user = con.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, hashed_password)
+        except:
+            return Response("The username is already taken", status=400)
 
+        session["user_id"] = new_user
+
+        return redirect("/")
+
+        
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
@@ -68,7 +101,7 @@ def login():
             return Response("must provide password", status=400,)
 
         # Query database for username
-        # rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        # rows = cur.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
@@ -84,3 +117,15 @@ def login():
     else:
         return render_template("login.html")
 
+
+def validate(password):
+
+    # This functions checks if the password meets all the requirements
+    if len(password) < 8:
+        return False
+    elif re.search('[0-9]', password) is None:
+        return False
+    elif re.search('[A-Z]', password) is None:
+        return False
+
+    return True
