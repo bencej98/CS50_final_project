@@ -20,10 +20,18 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
+# This function return dictionaries instead of tuples from the sql queries
+def dict_factory(cursor, row):
+    fields = [column[0] for column in cursor.description]
+    return {key: value for key, value in zip(fields, row)}
+
 # Establishes connection with the database
 con = sqlite3.connect("test.db")
 
-# Cursos is needed to execute statemenst and fetch results
+# Have to assign dict_factory so that cursor iterates through the given dicts
+con.row_factory = dict_factory
+
+# Creating the cursor to execute SQL statements and fetch results
 cur = con.cursor()
 
 app.after_request
@@ -46,6 +54,10 @@ def main_page():
 @app.route('/register', methods=['GET', 'POST'])
 # Registers the user
 def register():
+
+    con = sqlite3.connect("test.db")
+    cur = con.cursor()
+
     # When the site is opened via GET it gets displayed
     if request.method == "GET":
         return render_template("register.html")
@@ -70,9 +82,11 @@ def register():
         hashed_password = generate_password_hash(request.form.get("password"))
         username = request.form.get("username")
 
-                # Checks for username duplication
+        # Checks for username duplication
         try:
-            new_user = con.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, hashed_password)
+            new_user = cur.execute("INSERT INTO test (username, hash) VALUES (?, ?)", username, hashed_password)
+            #print(new_user)
+            con.commit()
         except:
             return Response("The username is already taken", status=400)
 
@@ -83,6 +97,8 @@ def register():
         
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+
+    con = sqlite3.connect("test.db")
 
     #Forgets the user
     session.clear()
@@ -100,15 +116,17 @@ def login():
         elif not request.form.get("password"):
             return Response("must provide password", status=400,)
 
-        # Query database for username
-        # rows = cur.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        #Query database for username (it gives back a cursor!)
+        result = cur.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        
+        for row in result:
 
         # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            return Response("invalid username and/or password", status=400,)
+            if len(row) != 1 or not check_password_hash(row[0]["hash"], request.form.get("password")):
+                return Response("invalid username and/or password", status=400,)
         
         # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
+        session["user_id"] = row[0]["id"]
 
         # Redirect user to home page
         return redirect("/")
