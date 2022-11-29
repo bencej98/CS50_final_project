@@ -25,8 +25,10 @@ def dict_factory(cursor, row):
     fields = [column[0] for column in cursor.description]
     return {key: value for key, value in zip(fields, row)}
 
+
+
 # Establishes connection with the database
-con = sqlite3.connect("test.db")
+con = sqlite3.connect('test.db')
 
 # Have to assign dict_factory so that cursor iterates through the given dicts
 con.row_factory = dict_factory
@@ -57,7 +59,6 @@ def register():
 
     con = sqlite3.connect("test.db")
     cur = con.cursor()
-
     # When the site is opened via GET it gets displayed
     if request.method == "GET":
         return render_template("register.html")
@@ -78,19 +79,20 @@ def register():
         elif request.form.get("password") != request.form.get("confirmation"):
             return Response("Passwords must match", status=400)
         
-        # Stores the hased password and the username in the database
+        # Stores the hased password and the username in a variable
         hashed_password = generate_password_hash(request.form.get("password"))
         username = request.form.get("username")
 
         # Checks for username duplication
         try:
-            new_user = cur.execute("INSERT INTO test (username, hash) VALUES (?, ?)", username, hashed_password)
+            cur.execute("INSERT INTO users (username, hash) VALUES (?, ?)", (username, hashed_password))
             #print(new_user)
             con.commit()
+            con.close()
         except:
             return Response("The username is already taken", status=400)
 
-        session["user_id"] = new_user
+        #session["user_id"] = new_user
 
         return redirect("/")
 
@@ -99,6 +101,7 @@ def register():
 def login():
 
     con = sqlite3.connect("test.db")
+    cur = con.cursor()
 
     #Forgets the user
     session.clear()
@@ -109,21 +112,21 @@ def login():
         # Ensure username was submitted
         if not request.form.get("username"):
             return Response(
-                    "must provide username", 
+                    "Must provide username", 
                     status=400,)
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return Response("must provide password", status=400,)
+            return Response("Must provide password", status=400,)
 
         #Query database for username (it gives back a cursor!)
-        result = cur.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        result = cur.execute("SELECT * FROM users WHERE username = ?", (request.form.get("username"),))
         
         for row in result:
 
         # Ensure username exists and password is correct
-            if len(row) != 1 or not check_password_hash(row[0]["hash"], request.form.get("password")):
-                return Response("invalid username and/or password", status=400,)
+            if len(row) != 1 or not check_password_hash(row[0]["hash"], (request.form.get("password"),)):
+                return Response("Invalid username and/or password", status=400,)
         
         # Remember which user has logged in
         session["user_id"] = row[0]["id"]
