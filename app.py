@@ -25,8 +25,6 @@ def dict_factory(cursor, row):
     fields = [column[0] for column in cursor.description]
     return {key: value for key, value in zip(fields, row)}
 
-
-
 # Establishes connection with the database
 con = sqlite3.connect('test.db')
 
@@ -44,21 +42,23 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-# The login_required decorator requires the user to login before use
-#@login.required
 
 @app.route('/')
-#@login_required
+
+# The login_required decorator requires the user to login before use
+@login_required
 def main_page():
-    return render_template("login.html")
+    return render_template("index.html")
 
 
 @app.route('/register', methods=['GET', 'POST'])
+
 # Registers the user
 def register():
 
-    con = sqlite3.connect("test.db")
-    cur = con.cursor()
+    connection = sqlite3.connect("test.db")
+    connection.row_factory = dict_factory
+    cur = connection.cursor()
     # When the site is opened via GET it gets displayed
     if request.method == "GET":
         return render_template("register.html")
@@ -86,25 +86,29 @@ def register():
         # Checks for username duplication
         try:
             cur.execute("INSERT INTO users (username, hash) VALUES (?, ?)", (username, hashed_password))
-            #print(new_user)
             con.commit()
             con.close()
         except:
             return Response("The username is already taken", status=400)
 
-        #session["user_id"] = new_user
+        # Sets session with the current user id
+        user_data = cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+        session["user_id"] = user_data["id"]
 
         return redirect("/")
 
         
 @app.route('/login', methods=['GET', 'POST'])
-def login():
 
-    con = sqlite3.connect("test.db")
-    cur = con.cursor()
+# Logs in the user
+def login():
 
     #Forgets the user
     session.clear()
+
+    connection = sqlite3.connect("test.db")
+    connection.row_factory = dict_factory
+    cur = connection.cursor()
 
      # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
@@ -122,26 +126,54 @@ def login():
         #Query database for username (it gives back a cursor!)
         result = cur.execute("SELECT * FROM users WHERE username = ?", (request.form.get("username"),))
         
+        '''
         for row in result:
-
-        # Ensure username exists and password is correct
-            if len(row) != 1 or not check_password_hash(row[0]["hash"], (request.form.get("password"),)):
-                return Response("Invalid username and/or password", status=400,)
+            if check_password_hash(row["hash"], (request.form.get("password"))) != True:
+                print("Password is not the same")
+            print(row["hash"])
+        '''
+        #for row in result:
+            #print(row[0]["hash"])
         
+        for row in result:
+        # Ensure username exists and password is correct
+            session["user_id"] = row["id"]
+            if row["username"] != request.form.get("username") or check_password_hash(row["hash"], (request.form.get("password"))) != True:
+                return Response("Invalid username and/or password", status=400,)
+            
         # Remember which user has logged in
-        session["user_id"] = row[0]["id"]
-
+        session["user_id"] = row["id"]
+        
         # Redirect user to home page
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
+    
+
+@app.route("/logout")
+
+# Logs out the user
+def logout():
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to login form
+    return redirect("/")
+
+@app.route("/transactions")
+@login_required
+def transaction():
+    if request.method == "GET":
+        return render_template("transactions.html")
 
 
+
+ # This functions checks if the password meets all the requirements
 def validate(password):
 
-    # This functions checks if the password meets all the requirements
     if len(password) < 8:
         return False
     elif re.search('[0-9]', password) is None:
@@ -150,3 +182,6 @@ def validate(password):
         return False
 
     return True
+
+if __name__ == '__main__':
+    app.run(debug=True)
