@@ -82,6 +82,7 @@ def register():
         elif password != request.form.get("confirmation"):
             return Response("Passwords must match", status=400)
 
+        # Checks for username duplication
         cur.execute("SELECT * FROM users WHERE username = ?", (username,))
         validator = cur.fetchone()
         if validator is not None:
@@ -89,17 +90,12 @@ def register():
         
         # Stores the hased password and the username in a variable
         hashed_password = generate_password_hash(password)
-        cur.execute("INSERT INTO users (username, hash) VALUES (?, ?)", (username, hashed_password))
-        connection.commit()
-        # Checks for username duplication
-        '''
-        try:
-            cur.execute("INSERT INTO users (username, hash) VALUES (?, ?)", (username, hashed_password))
-            connection.commit()
+        cur.execute("""INSERT INTO users (username, hash)
+                       VALUES (?, ?)"""
+                       , (username, hashed_password))
 
-        except:
-            return Response("The username is already taken", status=400)
-        '''
+        connection.commit()
+
         # Sets session with the current user id
         user_data = (cur.execute("SELECT * FROM users WHERE username = ?", (username,)))
         user = user_data.fetchall()
@@ -171,11 +167,14 @@ def logout():
 @login_required
 def transaction():
 
+# This function lets the user to withdraw or deposit assets of many types
+
+    # Sets up db connection and cursors (dict_factory is to return a dictionary not a tuple)
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
 
-
+    # Gets user data
     user = cur.execute("""SELECT username
                           FROM users
                           WHERE id = ?"""
@@ -185,7 +184,8 @@ def transaction():
 
     if request.method == "GET":
         return render_template("transactions.html")
-    
+
+    # Checks for possible errors
     if not request.form.get("transaction"):
         return Response("Must provide transaction type", status=400,)
     elif not request.form.get("amount"):
@@ -195,37 +195,66 @@ def transaction():
     elif not request.form.get("possession"):
         return Response("Must provide type of posession",status=400,)
 
-    # Also have to check if there is enough money on the account
 
     transaction_type = request.form.get("transaction")
     possession_type = request.form.get("possession")
     amount = int(request.form.get("amount"))
-    validation = cur.execute("SELECT id FROM all_assets WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (username, transaction_type, possession_type,))
+
+    # Validation is to check whether is there a similar entry or not with the given transaction type
+    validation = cur.execute("SELECT id FROM all_assets WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (username, possession_type, "Deposit",))
     count = len(validation.fetchall())
+
     # Records the transaction data in the transactions (needed for reports) and all_assets table (needed for index) 
     if request.form.get("transaction") == "Deposit":
         cur.execute("INSERT INTO transactions (username, transaction_type, possession_type, amount) VALUES (?, ?, ?, ?)", (username, transaction_type, possession_type, amount,))
-        # Here I should check whether the user transaction type and possession type is already present at the table
+        # If there is no entry yet inserts the given data
         if count == 0 :
             cur.execute("INSERT INTO all_assets (username, transaction_type, possession_type, amount) VALUES (?, ?, ?, ?)", (username, transaction_type, possession_type, amount,))
+        # If entry already exists updates the given data
         else:
-            cur.execute("UPDATE all_assets SET amount = amount + ? WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (amount, username, transaction_type, possession_type,))
+            cur.execute("UPDATE all_assets SET amount = amount + ? WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (amount, username, possession_type, transaction_type,))
         connection.commit()
     elif request.form.get("transaction") == "Withdraw":
-        cash = cur.execute("SELECT amount FROM all_assets WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (username, possession_type, transaction_type,))
+        cash = cur.execute("SELECT amount FROM all_assets WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (username, possession_type, "Deposit",))
         cash_count = cash.fetchall()
-        if count == 0 and cash_count[0]["amount"] >= int(request.form.get("amount")):
-            cur.execute("INSERT INTO transactions (username, transaction_type, possession_type, amount) VALUES (?, ?, ?, ?)", (username, transaction_type, possession_type, amount,))
-        else:
-            if cash_count[0]["amount"] >= int(request.form.get("amount")):
-                cur.execute("UPDATE all_assets SET amount = amount - ? WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (amount, username, transaction_type, possession_type,))
-            else:
+        # If there is no entry yet inserts the given data
+        if count == 0:
+                return Response("Amount can't be higher than asset amou", status=400)
+        # Checks if the user has enough assets and acts based on that
+        elif cash_count[0]["amount"] <= amount:
                 return Response("Amount can't be higher than asset amount", status=400)
+        elif cash_count[0]["amount"] >= amount:
+            cur.execute("INSERT INTO transactions (username, transaction_type, possession_type, amount) VALUES (?, ?, ?, ?)", (username, transaction_type, possession_type, amount,))
+            cur.execute("UPDATE all_assets SET amount = amount - ? WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (amount, username, possession_type, "Deposit",))
         connection.commit()
 
     connection.close()
     return redirect("/")
 
+@app.route("/reports")
+@login_required
+def reports():
+# This functions return the reports of all transactions made from an account
+
+# Sets up connection with db, creates a cursor
+    connection = sqlite3.connect("testDB.db")
+    connection.row_factory = dict_factory
+    cur = connection.cursor()
+
+    # Gets current user's id
+    user_data = cur.execute("""
+                          SELECT username
+                          FROM users
+                          WHERE id = ?"""
+                          ,(session["user_id"],))
+
+    # Returns current user's data needed for the report
+    user = user_data.fetchall()
+    username = user[0]["username"]
+    cursor = cur.execute("SELECT transaction_type, possession_type, amount, date FROM transactions WHERE username = ?", (username,))
+    reports = cursor.fetchall()
+
+    return render_template("reports.html", reports=reports)
 
  # This functions checks if the password meets all the requirements
 def validate(password):
