@@ -5,14 +5,24 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/sell" method="post">
+    <form action="/transactions" method="post">
         <div class="mb-3">
-            <select class="form-select mx-auto w-auto" name="symbol">
+            <select class="form-select mx-auto w-auto" name="transaction">
                 <option disabled="" selected="">Transaction type</option>
                 <option>Deposit</option>
                 <option>Withdraw</option>
             </select>
         </div>
+        <form action="/transactions" method="post">
+            <div class="mb-3">
+                <select class="form-select mx-auto w-auto" name="possession">
+                    <option disabled="" selected="">Possession type</option>
+                    <option>Cash</option>
+                    <option>Asset</option>
+                    <option>Credit</option>
+                    <option>Bank Account</option>
+                </select>
+            </div>
         <div class="mb-3">
             <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="amount" name="amount" placeholder="Amount" type="number">
         </div>

@@ -48,6 +48,7 @@ for row in results:
 '''
 #print(result)
 
+username = "Test"
 
 connection = sqlite3.connect("test.db")
 
@@ -55,9 +56,9 @@ connection.row_factory = dict_factory
 
 cur = connection.cursor()
 
-username = "Test"
+user_data = (cur.execute("SELECT * FROM users WHERE username = ?", (username,)))
+user = user_data.fetchall()
+print(user)
 
-result = cur.execute("SELECT * FROM users")
 
-for row in result:
-    print(row)
+
