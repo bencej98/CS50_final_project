@@ -11,15 +11,23 @@
               <th scope="col">Cash</th>
               <th scope="col">Bank Account</th>
               <th scope="col">Credit</th>
-              <th scope="col">Total Value</th>
+              <th scope="col">Asset</th>
             </tr>
           </thead>
           <tbody>
-
+            {% for data in dashboard %}
+            <tr>
+              <th>{{ data.amount | usd }} </th>
+              <th>{{ data.amount | usd }} </th>
+              <th>{{ data.amount | usd }} </th>
+              <th>{{ data.amount | usd }} </th>
+            </tr>
+            {% endfor %}
           </tbody>
           <tfoot>
             <tr>
-              <td class="border-0 fw-bold text-end" colspan="3">Total Balance:</td>
+              <td class="border-0 fw-bold text-end" colspan="3">Total Value:</td>
+              <td class="border-0 w-bold text-end" colspan="3">{{ total_value | usd }}</td>
             </tr>
           </tfoot>
     </table>

@@ -8,6 +8,7 @@ import re
 
 
 
+
 # Configure application
 app = Flask(__name__)
 
@@ -45,7 +46,6 @@ def after_request(response):
     response.headers["Expires"] = 0
     response.headers["Pragma"] = "no-cache"
     return response
-
 
 @app.route('/register', methods=['GET', 'POST'])
 
@@ -184,6 +184,7 @@ def main_page():
         connection = sqlite3.connect("testDB.db")
         connection.row_factory = dict_factory
         cur = connection.cursor()
+        # Gets current logged in user
         user_data = cur.execute(   """
                                     SELECT username
                                     FROM users
@@ -194,6 +195,7 @@ def main_page():
         user = user_data.fetchall()
         username = user[0]["username"]
 
+        # Gets data neccessarry for main_page
         dashboard_data = cur.execute(   """
                                         SELECT possession_type, amount
                                         FROM all_assets
@@ -202,11 +204,15 @@ def main_page():
                                         , (username,))
 
         dashboard = dashboard_data.fetchall()
-        print(dashboard)
 
+        # Gets the curent total value of all the assets
+        total_value = 0
+        for data in dashboard:
+            total_value += int(data["amount"])
 
-        
-    return render_template("main_page.html")
+        connection.close()
+
+    return render_template("main_page.html", dashboard=dashboard, total_value=total_value)
 
 @app.route("/transactions", methods=['GET', 'POST'])
 @login_required

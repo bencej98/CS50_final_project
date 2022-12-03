@@ -25,7 +25,11 @@ dashboard_data = cur.execute(           """
                                         , (username,))
 
 dashboard = dashboard_data.fetchall()
-print(dashboard[0]["possession_type"])
+for data in dashboard:
+    print(data["amount"])
+
+
+
 
 
 
