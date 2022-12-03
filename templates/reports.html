@@ -19,7 +19,7 @@
             <tr>
                 <th>{{ report.transaction_type}}</th>
                 <th>{{ report.possession_type}}</th>
-                <th>{{ report.amount   }}</th>
+                <th>{{ report.amount | usd}}</th>
                 <th>{{ report.date}}</th>
             </tr>
             {% endfor %}

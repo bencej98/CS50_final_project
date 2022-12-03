@@ -17,9 +17,16 @@ connection.row_factory = dict_factory
 
 cur = connection.cursor()
 
-validation = cur.execute("SELECT id FROM all_assets WHERE username = ? AND possession_type = ? AND transaction_type = ? ", (username, possession_type, transaction_type,))
-count = len(validation.fetchall())
-print(count)
+dashboard_data = cur.execute(           """
+                                        SELECT possession_type, amount
+                                        FROM all_assets
+                                        WHERE username = ?
+                                        """
+                                        , (username,))
+
+dashboard = dashboard_data.fetchall()
+print(dashboard[0]["possession_type"])
+
 
 
 
