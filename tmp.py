@@ -25,8 +25,24 @@ dashboard_data = cur.execute(           """
                                         , (username,))
 
 dashboard = dashboard_data.fetchall()
+
+credit_amount = 0
+data_list = []
+ 
 for data in dashboard:
-    print(data["amount"])
+    if data["possession_type"] == "Cash" :
+        cash_amount = data["amount"]
+        data_list.append(cash_amount)
+    elif data["possession_type"] == "Asset" :
+        asset_amount = data["amount"]
+    elif data["possession_type"] == "Bank Account" :
+        bank_account_amount = data["amount"]
+    else:
+        credit_amount = data["amount"]
+    
+
+print(data_list)
+
 
 
 

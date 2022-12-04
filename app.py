@@ -209,10 +209,28 @@ def main_page():
         total_value = 0
         for data in dashboard:
             total_value += int(data["amount"])
+        
+        # Seting all values the zero beforehand because otherwise if amount is not present the function crashes
+        cash_amount = 0
+        asset_amount = 0
+        bank_account_amount = 0
+        credit_amount = 0
+
+        # Gets all the amounts from the database ( I should find a better method for this)
+        for data in dashboard:
+            if data["possession_type"] == "Cash" :
+                cash_amount = data["amount"]
+            elif data["possession_type"] == "Asset" :
+                asset_amount = data["amount"]
+            elif data["possession_type"] == "Bank Account" :
+                bank_account_amount = data["amount"]
+            else:
+                credit_amount = data["amount"]
 
         connection.close()
 
-    return render_template("main_page.html", dashboard=dashboard, total_value=total_value)
+    # This looks ugly and should fix it with some better method as well
+    return render_template("main_page.html", credit_amount = credit_amount ,total_value=total_value, cash_amount=cash_amount, asset_amount=asset_amount , bank_account_amount=bank_account_amount, )
 
 @app.route("/transactions", methods=['GET', 'POST'])
 @login_required

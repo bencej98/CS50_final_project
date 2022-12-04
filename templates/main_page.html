@@ -15,14 +15,12 @@
             </tr>
           </thead>
           <tbody>
-            {% for data in dashboard %}
             <tr>
-              <th>{{ data.amount | usd }} </th>
-              <th>{{ data.amount | usd }} </th>
-              <th>{{ data.amount | usd }} </th>
-              <th>{{ data.amount | usd }} </th>
+              <th>{{ cash_amount | usd }} </th>
+              <th>{{ bank_account_amount | usd }} </th>
+              <th>{{ credit_amount | usd }} </th>
+              <th>{{ asset_amount | usd }} </th>
             </tr>
-            {% endfor %}
           </tbody>
           <tfoot>
             <tr>
