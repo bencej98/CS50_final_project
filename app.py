@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import Flask, render_template, redirect, request, session, Response
 from flask_session import Session
-from helpers import login_required, usd
+from helpers import login_required, usd, validate
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import re
@@ -379,17 +379,6 @@ def reports():
     connection.close()
     return render_template("reports.html", reports=reports)
 
- # This functions checks if the password meets all the requirements
-def validate(password):
-
-    if len(password) < 8:
-        return False
-    elif re.search('[0-9]', password) is None:
-        return False
-    elif re.search('[A-Z]', password) is None:
-        return False
-
-    return True
 
 if __name__ == '__main__':
     app.run(debug=True)
