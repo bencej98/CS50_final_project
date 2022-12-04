@@ -48,7 +48,6 @@ def after_request(response):
     return response
 
 @app.route('/register', methods=['GET', 'POST'])
-
 # Registers the user
 def register():
 
@@ -113,7 +112,6 @@ def register():
 
         
 @app.route('/login', methods=['GET', 'POST'])
-
 # Logs in the user
 def login():
 
@@ -174,11 +172,12 @@ def logout():
     return redirect("/")
 
 @app.route('/')
-
 # The login_required decorator requires the user to login before use
 @login_required
+# This function gets data about different assets and displays it on the main page
 def main_page():
-    
+
+
     if request.method == "GET":
         # Sets up db connection and cursors (dict_factory is to return a dictionary not a tuple)
         connection = sqlite3.connect("testDB.db")
@@ -234,9 +233,8 @@ def main_page():
 
 @app.route("/transactions", methods=['GET', 'POST'])
 @login_required
-def transaction():
-
 # This function lets the user to withdraw or deposit assets of many types
+def transaction():
 
     # Sets up db connection and cursors (dict_factory is to return a dictionary not a tuple)
     connection = sqlite3.connect("testDB.db")
@@ -348,8 +346,8 @@ def transaction():
 
 @app.route("/reports")
 @login_required
-def reports():
 # This functions return the reports of all transactions made from an account
+def reports():
 
 # Sets up connection with db, creates a cursor
     connection = sqlite3.connect("testDB.db")
