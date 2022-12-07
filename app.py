@@ -1,7 +1,7 @@
 from flask import Flask
-from flask import Flask, render_template, redirect, request, session, Response
+from flask import Flask, render_template, redirect, request, session, Response, flash
 from flask_session import Session
-from helpers import login_required, usd, validate
+from helpers import login_required, usd, validate, db_connection
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import re
@@ -63,19 +63,24 @@ def register():
         password = request.form.get("password")
 
         if not username:
-            return Response("Must provide username", status=400)
+            flash("Must provide username!")
+            return render_template("register.html")
 
         elif not password:
-            return Response("Must provide password", status=400)
+            flash("Must provide password!")
+            return render_template("register.html")
 
         elif validate(password) == False:
-            return Response("Password must contain at least 8 characters, a number and a capital letter!", status=400)
+            flash("Password must contain at least 8 characters, a number and a capital letter!")
+            return render_template("register.html")
 
         elif not request.form.get("confirmation"):
-            return Response("Must confirm password", status=400)
+            flash("Must confirm password!")
+            return render_template("register.html")
 
         elif password != request.form.get("confirmation"):
-            return Response("Passwords must match", status=400)
+            flash("Passwords must match!")
+            return render_template("register.html")
 
         # Checks for username duplication
         cur.execute(   """
@@ -117,23 +122,26 @@ def login():
 
     #Forgets the user
     session.clear()
-
+    
+    
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
+    
+    #cur, connection, dict_factory = db_connection()
 
      # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return Response(
-                    "Must provide username", 
-                    status=400,)
+            flash("Must provide username!")
+            return render_template("login.html")
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return Response("Must provide password", status=400,)
+            flash("Must provide password!")
+            return render_template("login.html")
 
         #Query database for username (it gives back a cursor!)
         user_data = cur.execute( """
@@ -145,9 +153,11 @@ def login():
         user = user_data.fetchall()
 
         if not any(user):
-            return Response("Username doesn't exist", status=400)
+            flash("Username doesn't exist!")
+            return render_template("login.html")
         elif check_password_hash(user[0]["hash"], (request.form.get("password"))) != True:
-            return Response("Invalid username and/or password", status=400,)
+            flash("Invalid username and/or password!")
+            return render_template("login.html")
  
         # Remember which user has logged in
         session["user_id"] = user[0]["id"]
@@ -229,7 +239,9 @@ def main_page():
         connection.close()
 
     # This looks ugly and should fix it with some better method as well
-    return render_template("main_page.html", credit_amount = credit_amount ,total_value=total_value, cash_amount=cash_amount, asset_amount=asset_amount , bank_account_amount=bank_account_amount, )
+    return render_template("main_page.html", credit_amount = credit_amount ,
+                                             total_value=total_value, cash_amount=cash_amount,
+                                             asset_amount=asset_amount , bank_account_amount=bank_account_amount, )
 
 @app.route("/transactions", methods=['GET', 'POST'])
 @login_required
@@ -257,13 +269,20 @@ def transaction():
 
     # Checks for possible errors
     if not request.form.get("transaction"):
-        return Response("Must provide transaction type", status=400,)
+        flash("Must provide transaction type!")
+        return render_template("transactions.html")
+
     elif not request.form.get("amount"):
-        return Response("Must provide the amount of money for transaction", status=400,)
+        flash("Must provide the amount of money for transaction")
+        return render_template("transactions.html")
+
     elif int(request.form.get("amount")) <= 0: 
-        return Response("Must provide a positive integer", status=400,)
+        flash("Must provide a positive integer")
+        return render_template("transactions.html")
+        
     elif not request.form.get("possession"):
-        return Response("Must provide type of posession",status=400,)
+        flash("Must provide type of possession")
+        return render_template("transactions.html")
 
 
     transaction_type = request.form.get("transaction")
@@ -319,10 +338,13 @@ def transaction():
         cash_count = cash.fetchall()
         # If there is no entry yet inserts the given data
         if count == 0:
-                return Response("Amount can't be higher than asset amou", status=400)
+                flash("Amount can't be higher than asset amount")
+                return render_template("transactions.html")
+
         # Checks if the user has enough assets and acts based on that
         elif cash_count[0]["amount"] <= amount:
-                return Response("Amount can't be higher than asset amount", status=400)
+                flash("Amount can't be higher than asset amount")
+                return render_template("transactions.html")
         elif cash_count[0]["amount"] >= amount:
             cur.execute(    """
                             INSERT INTO transactions (username, transaction_type, possession_type, amount) 

@@ -5,6 +5,56 @@
 {% endblock %}
 
 {% block main %}
+<div class="row row-cols-1 row-cols-md-4 g-4">
+  <div class="col">
+    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+      <div class="card-header">Cash</div>
+      <div class="card-body">
+        <h5 class="card-title">Cash</h5>
+        <p class="card-text">{{ cash_amount | usd }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card text-white bg-success mb-3" style="max-width: 18rem;">
+      <div class="card-header">Bank Account</div>
+      <div class="card-body">
+        <h5 class="card-title">Bank Account</h5>
+        <p class="card-text">{{ bank_account_amount | usd }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card text-white bg-warning mb-3" style="max-width: 18rem;">
+      <div class="card-header">Credit</div>
+      <div class="card-body">
+        <h5 class="card-title">Credit</h5>
+        <p class="card-text">{{ credit_amount | usd }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card text-white bg-secondary mb-3" style="max-width: 18rem;">
+      <div class="card-header">Asset</div>
+      <div class="card-body">
+        <h5 class="card-title">Asset</h5>
+        <p class="card-text">{{ asset_amount | usd }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+  <div class="d-block">
+    <div class="card text-dark bg-light mb-3 mx-auto" style="max-width: 18rem;">
+      <div class="card-header">Total Value</div>
+      <div class="card-body">
+        <h5 class="card-title">Total Value</h5>
+        <p class="card-text">{{ total_value | usd }}</p>
+      </div>
+    </div>
+  </div>
+
+
+    <!--
     <table class="table table-hover">
         <thead>
             <tr>
@@ -29,4 +79,5 @@
             </tr>
           </tfoot>
     </table>
+    -->
 {% endblock %}

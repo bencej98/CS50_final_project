@@ -1,6 +1,7 @@
 from flask import redirect, render_template, request, session
 from functools import wraps
 import re
+import sqlite3
 
 # Login Required Decorator
 def login_required(f):
@@ -26,3 +27,10 @@ def validate(password):
         return False
 
     return True
+'''
+def db_connection():
+    connection = sqlite3.connect("testDB.db")
+    connection.row_factory = dict_factory
+    cur = connection.cursor()
+    return cur, dict_factory, connection
+'''
