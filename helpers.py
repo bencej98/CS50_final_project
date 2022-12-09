@@ -27,10 +27,9 @@ def validate(password):
         return False
 
     return True
-'''
+
 def db_connection():
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
     return cur, dict_factory, connection
-'''

@@ -239,9 +239,10 @@ def main_page():
         connection.close()
 
     # This looks ugly and should fix it with some better method as well
-    return render_template("main_page.html", credit_amount = credit_amount ,
+    return render_template("main_page.html", credit_amount=credit_amount ,
                                              total_value=total_value, cash_amount=cash_amount,
-                                             asset_amount=asset_amount , bank_account_amount=bank_account_amount, )
+                                             asset_amount=asset_amount , bank_account_amount=bank_account_amount,
+                                             username=username)
 
 @app.route("/transactions", methods=['GET', 'POST'])
 @login_required
@@ -265,7 +266,7 @@ def transaction():
     username = user[0]["username"]
 
     if request.method == "GET":
-        return render_template("transactions.html")
+        return render_template("transactions.html", username=username)
 
     # Checks for possible errors
     if not request.form.get("transaction"):
@@ -273,7 +274,7 @@ def transaction():
         return render_template("transactions.html")
 
     elif not request.form.get("amount"):
-        flash("Must provide the amount of money for transaction")
+        flash("Must provide the amount of money for transaction!")
         return render_template("transactions.html")
 
     elif int(request.form.get("amount")) <= 0: 
@@ -281,7 +282,7 @@ def transaction():
         return render_template("transactions.html")
         
     elif not request.form.get("possession"):
-        flash("Must provide type of possession")
+        flash("Must provide type of possession!")
         return render_template("transactions.html")
 
 
@@ -397,7 +398,7 @@ def reports():
 
     reports = cursor.fetchall()
     connection.close()
-    return render_template("reports.html", reports=reports)
+    return render_template("reports.html", reports=reports, username=username)
 
 
 if __name__ == '__main__':

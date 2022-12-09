@@ -10,19 +10,45 @@ def dict_factory(cursor, row):
 
 username = "Test"
 possession_type = "Cash"
-transaction_type = "Deposit"
-connection = sqlite3.connect("testDB.db")
+transaction_type = "Withdraw"
+amount = -300
+connection = sqlite3.connect("test.db")
 
 connection.row_factory = dict_factory
 
 cur = connection.cursor()
 
+'''
+
+cur.execute( """
+            INSERT INTO transactions (username, possession_type, transaction_type, amount)
+            VALUES (?, ?, ?, ?)
+            """
+            , (username, possession_type, transaction_type, amount,))
+
+
+connection.commit()
+'''
+
+data = cur.execute("SELECT amount FROM transactions WHERE username = ?", (username,))
+
+data1 = data.fetchall()
+sum = 0
+for data in data1:
+    sum+=data["amount"]
+
+print(sum)
+
+'''
 dashboard_data = cur.execute(           """
                                         SELECT possession_type, amount
                                         FROM all_assets
                                         WHERE username = ?
                                         """
                                         , (username,))
+
+
+
 
 dashboard = dashboard_data.fetchall()
 
@@ -42,6 +68,8 @@ for data in dashboard:
     
 
 print(data_list)
+
+'''
 
 
 
