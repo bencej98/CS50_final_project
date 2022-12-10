@@ -71,6 +71,56 @@ print(data_list)
 
 '''
 
+# NEW QUERIES FOR ONLY ONE DB
+
+# MAIN PAGE
+
+# It will give back each transaction amount for each possession type (summed up)
+dashboard_data = cur.execute("""
+                            SELECT SUM(amount)
+                            FROM transcations
+                            WHERE username = ?
+                            AND possession_type = ?    
+                            """
+                            , (username, possession_type))
+
+# TRANSACTIONS
+
+# Inserting into transactions (all assets is not needed)
+if transaction_type = "Withdraw":
+
+    cur.execute(    """
+                    INSERT INTO transactions (username, transaction_type, possession_type, amount)
+                    VALUES (?, ?, ?, ?)
+                    """
+                    , (username, transaction_type, possession_type, amount * (-1),))
+
+else:
+
+    cur.execute(    """
+                INSERT INTO transactions (username, transaction_type, possession_type, amount)
+                VALUES (?, ?, ?, ?)
+                """
+                , (username, transaction_type, possession_type, amount))
+
+# Cash count
+
+# Gets the summed amount of each possession type from transactions
+
+elif request.form.get("transaction") == "Withdraw":
+    cash = cur.execute( """
+                        SELECT SUM(amount) 
+                        FROM all_assets 
+                        WHERE username = ? 
+                        AND possession_type = ? 
+                        AND transaction_type = ? 
+                        """
+                        , (username, possession_type, "Deposit",))
+            
+
+            
+
+
 
 
 
