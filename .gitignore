@@ -1,0 +1,8 @@
+linux-env
+flask_session
+__pycache__
+.vscode
+.venv
+linux-env
+*.db
+tmp.py

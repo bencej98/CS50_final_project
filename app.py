@@ -1,12 +1,10 @@
 from flask import Flask
 from flask import Flask, render_template, redirect, request, session, Response, flash
 from flask_session import Session
-from helpers import login_required, usd, validate, db_connection
+from helpers import login_required, usd, validate, admin, dict_factory
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import re
-
-
 
 
 # Configure application
@@ -25,10 +23,8 @@ Session(app)
 # Imports custom filter for dollars
 app.jinja_env.filters["usd"] = usd
 
-# This function return dictionaries instead of tuples from the sql queries
-def dict_factory(cursor, row):
-    fields = [column[0] for column in cursor.description]
-    return {key: value for key, value in zip(fields, row)}
+#Validates the admin user
+admin()
 
 # Establishes connection with the database
 con = sqlite3.connect('testDB.db')
@@ -62,8 +58,13 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
 
+        # Checks for possible errors 
         if not username:
             flash("Must provide username!")
+            return render_template("register.html")
+         
+        elif not re.match("^[A-Za-z0-9]*$", username):
+            flash("Username must only contain numbers and letters!")
             return render_template("register.html")
 
         elif not password:
@@ -81,6 +82,7 @@ def register():
         elif password != request.form.get("confirmation"):
             flash("Passwords must match!")
             return render_template("register.html")
+
 
         # Checks for username duplication
         cur.execute(   """
@@ -123,13 +125,10 @@ def login():
     #Forgets the user
     session.clear()
     
-    
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
     
-    #cur, connection, dict_factory = db_connection()
-
      # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
@@ -204,13 +203,14 @@ def main_page():
         user = user_data.fetchall()
         username = user[0]["username"]
 
-        # Gets data neccessarry for main_page
+        # New query for only one database to get the data necessary for homepage dashboard
         dashboard_data = cur.execute(   """
                                         SELECT possession_type, amount
-                                        FROM all_assets
-                                        WHERE username = ?
+                                        FROM transactions
+                                        WHERE username = ?   
                                         """
                                         , (username,))
+        
 
         dashboard = dashboard_data.fetchall()
 
@@ -224,21 +224,20 @@ def main_page():
         asset_amount = 0
         bank_account_amount = 0
         credit_amount = 0
-
+        
         # Gets all the amounts from the database ( I should find a better method for this)
         for data in dashboard:
             if data["possession_type"] == "Cash" :
-                cash_amount = data["amount"]
+                cash_amount += data["amount"]
             elif data["possession_type"] == "Asset" :
-                asset_amount = data["amount"]
+                asset_amount += data["amount"]
             elif data["possession_type"] == "Bank Account" :
-                bank_account_amount = data["amount"]
+                bank_account_amount += data["amount"]
             else:
-                credit_amount = data["amount"]
+                credit_amount += data["amount"]
 
         connection.close()
 
-    # This looks ugly and should fix it with some better method as well
     return render_template("main_page.html", credit_amount=credit_amount ,
                                              total_value=total_value, cash_amount=cash_amount,
                                              asset_amount=asset_amount , bank_account_amount=bank_account_amount,
@@ -271,29 +270,31 @@ def transaction():
     # Checks for possible errors
     if not request.form.get("transaction"):
         flash("Must provide transaction type!")
-        return render_template("transactions.html")
+        return render_template("transactions.html", username=username)
 
     elif not request.form.get("amount"):
         flash("Must provide the amount of money for transaction!")
-        return render_template("transactions.html")
+        return render_template("transactions.html", username=username)
 
     elif int(request.form.get("amount")) <= 0: 
         flash("Must provide a positive integer")
-        return render_template("transactions.html")
+        return render_template("transactions.html", username=username)
         
     elif not request.form.get("possession"):
         flash("Must provide type of possession!")
-        return render_template("transactions.html")
+        return render_template("transactions.html", username=username)
 
 
     transaction_type = request.form.get("transaction")
     possession_type = request.form.get("possession")
     amount = int(request.form.get("amount"))
 
-    # Validation is to check whether is there a similar entry or not with the given transaction type
+    # Validation is to check whether is there a similar entry or not with the given transaction type (old query for 2 databases)
+
+     # New query for only one database (prototype)
     validation = cur.execute(   """
                                 SELECT id
-                                FROM all_assets WHERE username = ?
+                                FROM transactions WHERE username = ?
                                 AND possession_type = ?
                                 AND transaction_type = ? 
                                 """
@@ -308,59 +309,40 @@ def transaction():
                         VALUES (?, ?, ?, ?)
                         """
                         , (username, transaction_type, possession_type, amount,))
-        # If there is no entry yet inserts the given data
-        if count == 0 :
-            cur.execute(    """
-                            INSERT INTO all_assets (username, transaction_type, possession_type, amount)
-                            VALUES (?, ?, ?, ?)
-                            """
-                            , (username, transaction_type, possession_type, amount,))
-        # If entry already exists updates the given data
-        else:
-            cur.execute(    """
-                            UPDATE all_assets 
-                            SET amount = amount + ?
-                            WHERE username = ? 
-                            AND possession_type = ?
-                            AND transaction_type = ? 
-                            """
-                            , (amount, username, possession_type, transaction_type,))
+        
         connection.commit()
 
     elif request.form.get("transaction") == "Withdraw":
-        cash = cur.execute( """
-                            SELECT amount 
-                            FROM all_assets 
-                            WHERE username = ? 
-                            AND possession_type = ? 
-                            AND transaction_type = ? 
-                            """
-                            , (username, possession_type, "Deposit",))
+
+        # New query for one database to get the amount for each possession type
+        cash = cur.execute(     """
+                                SELECT SUM(amount)
+                                AS amount 
+                                FROM transactions 
+                                WHERE username = ? 
+                                AND possession_type = ? 
+                                AND transaction_type = ? 
+                                """
+                                , (username, possession_type, "Deposit",))
+
         cash_count = cash.fetchall()
         # If there is no entry yet inserts the given data
         if count == 0:
                 flash("Amount can't be higher than asset amount")
-                return render_template("transactions.html")
+                return render_template("transactions.html", username=username)
 
-        # Checks if the user has enough assets and acts based on that
+        # Checks if the user has enough assets and acts based on that   
         elif cash_count[0]["amount"] <= amount:
                 flash("Amount can't be higher than asset amount")
-                return render_template("transactions.html")
+                return render_template("transactions.html", username=username)
         elif cash_count[0]["amount"] >= amount:
+        
             cur.execute(    """
                             INSERT INTO transactions (username, transaction_type, possession_type, amount) 
                             VALUES (?, ?, ?, ?)
                             """
-                            , (username, transaction_type, possession_type, amount,))
+                            , (username, transaction_type, possession_type, amount * (-1) ,))
 
-            cur.execute(    """
-                            UPDATE all_assets 
-                            SET amount = amount - ? 
-                            WHERE username = ? 
-                            AND possession_type = ? 
-                            AND transaction_type = ? 
-                            """
-                            , (amount, username, possession_type, "Deposit",))
 
         connection.commit()
 
@@ -399,6 +381,66 @@ def reports():
     reports = cursor.fetchall()
     connection.close()
     return render_template("reports.html", reports=reports, username=username)
+
+@app.route("/budget")
+@login_required
+def budget():
+    return render_template("budget.html")
+
+
+@app.route("/admin")
+@login_required
+# This function returns a dashboard for the admin user
+def admin():
+
+    connection = sqlite3.connect("testDB.db")
+    connection.row_factory = dict_factory
+    cur = connection.cursor()
+
+    if session["user_id"] == 1:
+
+        users = cur.execute(    """
+                                    SELECT
+                                    username, id
+                                    FROM
+                                    users
+                                    """)
+
+        users_data = users.fetchall()
+
+        user_data = cur.execute(    """
+                                SELECT username
+                                FROM users
+                                WHERE id = ?
+                                """
+                                ,(session["user_id"],))
+
+        # Returns current user's data needed for the report
+        user = user_data.fetchall()
+        username = user[0]["username"]
+
+        connection.close()
+        return render_template("admin.html", users_data=users_data, username=username)
+        
+    else:
+        flash("You can only access this page with an admin profile!")
+        return redirect("/")
+
+
+@app.route("/delete", methods=["POST"])
+@login_required
+#This function lets a user with admin priviliges delete other users
+def delete():
+
+    connection = sqlite3.connect("testDB.db")
+    connection.row_factory = dict_factory
+    cur = connection.cursor()
+    user_id = request.form.get("id")
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    connection.commit()
+    connection.close()
+
+    return redirect("/admin")
 
 
 if __name__ == '__main__':
