@@ -1,5 +1,5 @@
 linux-env
-flask_session
+*_session
 __pycache__
 .vscode
 .venv
