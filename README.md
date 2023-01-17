@@ -86,8 +86,9 @@ There are other supporting files as well such as the html files.
 
 Currently there is a plan to make a new tab called "Budget" and a currency selector. The home page dashboard could be improved with some diagrams.
 
-# Struggles / Issues throughout the project  
+# Struggles / Summary 
 
 Given the fact the the Flask framework, Javascript and SQLite is completely new to me most of the time I had to use the documentations to connect the dots. 
+I believe that I learnt a lot of new technologies and solutions throughout this project. Before starting CS50 I could have never imagined that I will be able to create something like this from scratch. I am eager to learn new technologies and continue my path to be a full-time developer one day.
 
 
