@@ -2,7 +2,10 @@
 
 ## Project name: Financial Tracker  
   
-    
+# Description:  
+
+This project was created for the final lesson of Harvard University's CS50 course. Throughout my aim was to create a webapp that tracks the change of savings in a persons life. The webapp is hosted on pythonanywhere and you can reach it via this link: https://financetracker.pythonanywhere.com/
+
 # App Structure:
 
 ├── CS50_final_project  
@@ -32,9 +35,7 @@ HTML
 CSS  
 SQLite  
 
-# Description:  
-
-Throughout this project my aim was to create a webapp that tracks financial changes in a persons life.
+# Usage
 
 ### Registering:  
 
@@ -68,7 +69,7 @@ The user can log out from the webapp with the Log Out button situated in the rig
 
 # Structure of the webapp  
 
-Financie Tracker is written mainly in Python using Flask framework. It also contains a little bit of javascript as well.
+Financie Tracker is written mainly in Python using Flask framework. It also contains a little bit of Javascript as well.
 
 For the database it uses SQLite3 which is a relational database.
 
