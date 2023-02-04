@@ -4,7 +4,12 @@
   
 # Description:  
 
-This project was created for the final lesson of Harvard University's CS50 course. Throughout my aim was to create a webapp that tracks the change of savings in a persons life. The webapp is hosted on pythonanywhere and you can reach it via this link: https://financetracker.pythonanywhere.com/
+This project was created for the final lesson of Harvard University's CS50 course. Throughout my aim was to create a webapp that tracks the change of savings in a persons life. 
+
+The webapp is hosted on pythonanywhere and you can reach it via this link: https://financetracker.pythonanywhere.com/
+
+I have also containerized the webapp using Docker. The docker image is reachable on my docker hub: https://hub.docker.com/r/bencej/finance_tracker. Under "Running containerized version" you can find a brief description about how to run the image locally on your pc.
+
 
 # App Structure:
 
@@ -66,6 +71,21 @@ Password: admin
 
 The user can log out from the webapp with the Log Out button situated in the right corner.
 
+# Running containerized version
+
+Prerequisites: Docker installed on your PC (https://docs.docker.com/get-docker/)
+
+1. If you have succesfully installed Docker all you need to do is navigate to my docker hub profile where the image is located: https://hub.docker.com/r/bencej/finance_tracker/tags
+
+2. From here you should you use "docker pull bencej/finance_tracker:0.0.1.RELEASE" (without quotation marks) in your terminal to pull the image from the hub to your PC. After succesfully pulling the image it will appear under the Images tab of Docker Desktop. 
+
+3. In the Images tab look for "bencej/finance_tracker" image and click on "Run" below "Actions". On the popup window click "Optional settings" and under "Ports" type 3000. This will create a container which runs the webapp on your PC on port 3000.
+
+4. The webapp is now reachable on localhost:3000 or 127.0.0.1:3000
+
+5. If you want to stop the container from running, you can do it by navigating to the Containers tab of the Docker Desktop app and simply click "Stop" under "Actions". After this the webapp is no longer reachable.
+
+NOTE: You don't have to create a container in the "Images" tab everytime you run the app. After running it once you can simply launch it again from "Containers" tab by clicking "Run" under "Action".
 
 # Structure of the webapp  
 
