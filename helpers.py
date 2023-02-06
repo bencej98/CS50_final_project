@@ -35,12 +35,6 @@ def dict_factory(cursor, row):
     fields = [column[0] for column in cursor.description]
     return {key: value for key, value in zip(fields, row)}
 
-def db_connection():
-    connection = sqlite3.connect("testDB.db")
-    connection.row_factory = dict_factory
-    cur = connection.cursor()
-    return cur, dict_factory, connection
-
 #This function creates and admin user or checks if there is already one
 def admin():
     connection = sqlite3.connect("testDB.db")
