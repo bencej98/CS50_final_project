@@ -5,10 +5,13 @@ from helpers import login_required, usd, validate, admin, dict_factory
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import re
+from os import path
 
 
 # Configure application
 app = Flask(__name__)
+
+ROOT = path.dirname(path.realpath(__file__))
 
 # Auto-reloads templates if modified
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -26,15 +29,6 @@ app.jinja_env.filters["usd"] = usd
 #Validates the admin user
 admin()
 
-# Establishes connection with the database
-con = sqlite3.connect('testDB.db')
-
-# Have to assign dict_factory so that cursor iterates through the given dicts
-con.row_factory = dict_factory
-
-# Creating the cursor to execute SQL statements and fetch results
-cur = con.cursor()
-
 app.after_request
 def after_request(response):
     #Disables catching
@@ -47,9 +41,15 @@ def after_request(response):
 # Registers the user
 def register():
 
+    # Establishes connection with the database
     connection = sqlite3.connect("testDB.db")
+
+    # Have to assign dict_factory so that cursor iterates through the given dicts
     connection.row_factory = dict_factory
+
+    # Creating the cursor to execute SQL statements and fetch results
     cur = connection.cursor()
+
     # When the site is opened via GET it gets displayed
     if request.method == "GET":
         return render_template("register.html")
@@ -124,10 +124,11 @@ def login():
 
     #Forgets the user
     session.clear()
-    
+
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
+
     
      # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
@@ -188,10 +189,11 @@ def main_page():
 
 
     if request.method == "GET":
-        # Sets up db connection and cursors (dict_factory is to return a dictionary not a tuple)
+
         connection = sqlite3.connect("testDB.db")
         connection.row_factory = dict_factory
         cur = connection.cursor()
+
         # Gets current logged in user
         user_data = cur.execute(   """
                                     SELECT username
@@ -247,8 +249,7 @@ def main_page():
 @login_required
 # This function lets the user to withdraw or deposit assets of many types
 def transaction():
-
-    # Sets up db connection and cursors (dict_factory is to return a dictionary not a tuple)
+    
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
@@ -290,8 +291,6 @@ def transaction():
     amount = int(request.form.get("amount"))
 
     # Validation is to check whether is there a similar entry or not with the given transaction type (old query for 2 databases)
-
-     # New query for only one database (prototype)
     validation = cur.execute(   """
                                 SELECT id
                                 FROM transactions WHERE username = ?
@@ -354,7 +353,6 @@ def transaction():
 # This functions return the reports of all transactions made from an account
 def reports():
 
-# Sets up connection with db, creates a cursor
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
@@ -393,9 +391,12 @@ def budget():
 # This function returns a dashboard for the admin user
 def admin():
 
+
     connection = sqlite3.connect("testDB.db")
     connection.row_factory = dict_factory
     cur = connection.cursor()
+
+
 
     if session["user_id"] == 1:
 
@@ -444,4 +445,4 @@ def delete():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int("3000"), debug=True)
