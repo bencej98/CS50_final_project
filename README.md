@@ -44,13 +44,13 @@ SQLite
 
 ### Registering:  
 
-To use this app one should register using a username and a password. There are prerequisites for both the username and the password and in case they are not met the webapp displays and error message to the user. For the username one should only use numbers or letters meanwhile the password must containt at least 8 characters in which at least there is one uppercase letter and a number.
+To use this app one should register using a username and a password. There are prerequisites for both the username and the password and in case they are not met the webapp displays an error message to the user. For the username one should only use numbers or letters meanwhile the password must containt at least 8 characters in which at least there is one uppercase letter and a number.
 
 The webapp currently consists of 4 pages which are the homepage, transactions, reports and admin
 
 ### Homepage:  
 
-After logging in you are redirect to the homepage where you can see your current balance of the different kind of assets. These are updated as you deposit or withdraw from your account.
+After logging in you are redirected to the homepage where you can see your current balance of the different kind of assets. These are updated as you deposit or withdraw from your account.
 
 ### Transactions:  
 
