@@ -81,7 +81,7 @@ Prerequisites: Docker installed on your PC (https://docs.docker.com/get-docker/)
 
 3. In the Images tab look for "bencej/finance_tracker" image and click on "Run" below "Actions". On the popup window click "Optional settings" and under "Ports" type 3000. This will create a container which runs the webapp on your PC on port 3000.
 
-4. The webapp is now reachable on localhost:3000 or 127.0.0.1:3000s
+4. The webapp is now reachable on localhost:3000 or 127.0.0.1:3000
 
 5. If you want to stop the container from running, you can do it by navigating to the Containers tab of the Docker Desktop app and simply click "Stop" under "Actions". After this the webapp is no longer reachable.
 
